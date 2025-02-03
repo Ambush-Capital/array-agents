@@ -19,3 +19,6 @@ This project uses AI agents to develop and execute trading strategies based on r
   - `test_strategy_evaluation.py`: Unit tests for strategy evaluation.
   - `test_strategy_execution.py`: Unit tests for strategy execution.
 - `requirements.txt`: Lists all project dependencies.
+=======
+# array-agents
+Agents for array project
