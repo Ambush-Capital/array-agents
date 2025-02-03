@@ -1,0 +1,8 @@
+Position #,Wallet Address,Platform,Market,Strategy,Amount (USDC)
+1,F4kEaDdReSsThAtYouCanUsEaSPlAcEh0lDeR1234,Kamino,JLP Market,Lend USDC,325.32
+2,F4kEaDdReSsThAtYouCanUsEaSPlAcEh0lDeR1234,Marginfi,Global Pool,Lend USDC,82.81
+3,F4kEaDdReSsThAtYouCanUsEaSPlAcEh0lDeR1234,Save,Main Pool,Lend USDC,4.11
+4,F4kEaDdReSsThAtYouCanUsEaSPlAcEh0lDeR1234,Save,JLP Pool,Lend USDC,2.82
+5,F4kEaDdReSsThAtYouCanUsEaSPlAcEh0lDeR1234,Drift,USDC,Lend USDC,138.06
+6,F4kEaDdReSsThAtYouCanUsEaSPlAcEh0lDeR1234,Drift,USDC-1,Lend USDC,138.06
+7,F4kEaDdReSsThAtYouCanUsEaSPlAcEh0lDeR1234,Unallocated,N/A,N/A,100
