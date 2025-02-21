@@ -1,46 +1,58 @@
-import openai
+from openai import OpenAI
 import pandas as pd
+import os
 from config import OPENAI_API_KEY
+from .fetch_market_data import MarketData
+from dataclasses import dataclass
+from typing import Dict, Union, List, Optional
+import json
 
-# Set up your OpenAI API key
-openai.api_key = OPENAI_API_KEY
+# Initialize OpenAI client
+client = OpenAI(api_key=OPENAI_API_KEY)
 
 class DataAnalystAgent:
-    def __init__(self, market_data_file="/Users/carly/rayray/trading-strategies-ai/data/market_data/market_data.csv"):
-        self.market_data_file = market_data_file
+    def __init__(self, market_data=None):
+        if market_data is None:
+            market_data = MarketData()
+        self.market_data = market_data
 
     def analyze_market(self):
-        # 1. Load market data from CSV
+        # Get market data from MarketData object
         try:
-            market_data = pd.read_csv(self.market_data_file)
-        except FileNotFoundError:
-            return "Error: Market data file not found."  # Handle file errors
-
-        # 2. Extract relevant data (example - adjust based on your CSV structure)
-        # solana_price = market_data['SOL_price'].iloc[-1]  # Get latest SOL price
-        # liquidity_pools = market_data[['pool_name', 'APY']]  # Get pool data
-
-        # 3. Prepare the prompt for the LLM
-        prompt = f"""Use the current {market_data}  to make a specific recommendation on how to allocate $10000 with moderate risk"""
-        #to identify opportunities for yield.
-
-       # * Liquidity of trading pairs
-       # * APYs offered by different DeFi protocols
-       # * Potential risks (impermanent loss, smart contract vulnerabilities)
-       # * Overall market sentiment (positive, negative, neutral)
-
-        #Provide a concise summary of your findings and highlight the most promising opportunities for yield generation. Use specific numbers for the protocols
-   # """
-        # 4. Call the OpenAI API
-        try:
-            response = openai.ChatCompletion.create(
-                model="gpt-3.5-turbo",
-                messages=[{"role": "system", "content": "You are a financial analyst specializing in DeFi investments."},
-                        {"role": "user", "content": prompt}],
-                max_tokens=300
-            )
-            analysis_result = response["choices"][0]["message"]["content"]
+            data = self.market_data.get_market_data()
+            if data is None:
+                return {"error": "No market data available"}
+            
+            market_data = pd.DataFrame(data)
+            if market_data.empty:
+                return {"error": "Market data is empty"}
         except Exception as e:
-            return f"Error in AI response: {str(e)}"
+            return {"error": f"Error processing market data: {str(e)}"}
 
-        return analysis_result  # 4. Return the analysis result
+        # Prepare the prompt for the LLM
+        prompt = f"""You are a financial data analyst, specializing in yield optimization. Analyze the following market data, with a particular focus on supply rate, and provide specific allocation recommendations for a $10,000 portfolio with high risk:
+Context: 
+
+Market Data Summary:
+{data}
+
+Please provide:
+1. Specific allocation amounts for different protocols
+2. Expected yield/returns
+3. Risk assessment for each recommendation
+4. Any relevant market conditions affecting the decision
+"""
+        # Call the OpenAI API
+        try:
+            response = client.chat.completions.create(
+                model="gpt-4",
+                messages=[
+                    {"role": "system", "content": "You are a financial analyst specializing in DeFi investments."},
+                    {"role": "user", "content": prompt}
+                ],
+                max_completion_tokens=500
+            )
+            
+            return response.choices[0].message.content
+        except Exception as e:
+            return {"error": f"Error calling OpenAI API: {str(e)}"}
