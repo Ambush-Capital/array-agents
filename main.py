@@ -20,9 +20,7 @@ from tools.fetch_wallet_data import WalletData
 
 # Import config and utilities
 from config.settings import load_config
-from config.settings import DEFAULT_RISK_LEVEL
 from utils.logger import setup_logger
-
 
 def parse_arguments():
     """Parse command line arguments."""
@@ -32,15 +30,12 @@ def parse_arguments():
                       help="API URL for market data")
     # parser.add_argument("--wallet-address", default=DEFAULT_WALLET_ADDRESS, required=True,
     #                   help="Wallet address to analyze")
-    parser.add_argument("--risk-level", default=DEFAULT_RISK_LEVEL, choices=["low", "medium", "high"],
-                      help="Risk tolerance level")
     parser.add_argument("--output-dir", default="outputs",
                       help="Directory for output files")
     parser.add_argument("--debug", action="store_true",
                       help="Enable debug logging")
     
     return parser.parse_args()
-
 
 def setup_environment(args):
     """Set up the execution environment."""
@@ -75,222 +70,34 @@ def setup_environment(args):
         }
     }
 
-
-# def run_data_aggregation(env, args):
-#     """Run the data aggregation process."""
-#     logger = env["logger"]
-#     logger.info("Starting data aggregation")
+def get_risk_tolerance():
+    """
+    Collect risk tolerance from the user and store it as a global variable.
     
-#     data_aggregator = DataAggregator(config=env["config"])
+    Returns:
+        str: The user's risk tolerance level
+    """
     
-#     result = data_aggregator.execute_task({
-#         "task_type": "aggregate_all_data",
-#         "api_url": args.api_url,
-#         "wallet_address": args.wallet_address,
-#         "output_dir": env["dirs"]["data"],
-#         "timestamp": datetime.now().isoformat()
-#     })
+    # Request risk tolerance from the user
+    user_input = input("Please enter your risk tolerance (low, medium, high): ").strip().lower()
+    print(f"Setting risk tolerance to: {user_input}")
     
-#     if "error" in result:
-#         logger.error(f"Data aggregation failed: {result['error']}")
-#         raise Exception(f"Data aggregation failed: {result['error']}")
+    # Validate risk tolerance input
+    if user_input not in ['low', 'medium', 'high']:
+        raise ValueError("Risk tolerance must be one of: 'low', 'medium', 'high'")
     
-#     logger.info("Data aggregation completed successfully")
-#     return result["data"]
-
-
-# def run_research(env, data_paths):
-#     """Run the research process."""
-#     logger = env["logger"]
-#     logger.info("Starting market research")
+    # Store in global variable
+    return user_input
     
-#     researcher = Researcher(config=env["config"])
-    
-#     result = researcher.execute_task({
-#         "task_type": "market_research",
-#         "protocol_names": ["marginfi", "kamino", "drift", "solend"],
-#         "output_format": "markdown",
-#         "output_path": f"{env['dirs']['analysis']}/market_research.md"
-#     })
-    
-#     if "error" in result:
-#         logger.error(f"Market research failed: {result['error']}")
-#         raise Exception(f"Market research failed: {result['error']}")
-    
-#     logger.info("Market research completed successfully")
-#     return {
-#         "research_path": f"{env['dirs']['analysis']}/market_research.md"
-#     }
-
-
-def run_yield_analysis(env, data_paths):
-    """Run the yield analysis process."""
-    logger = env["logger"]
-    logger.info("Starting yield analysis")
-
-    # Create YieldAnalyst instance
-    yield_analyst = YieldAnalyst(config=env["config"])
-    
-    # First, analyze yields
-    analysis_results = yield_analyst.execute_task({
-        "task_type": "yield_analysis",
-        "market_data_path": data_paths["market_data_path"],
-        "output_format": "markdown",
-        "output_path": f"{env['dirs']['analysis']}/yield_analysis.md"
-    })
-    
-    if "error" in analysis_results:
-        logger.error(f"Yield analysis failed: {analysis_results['error']}")
-        raise Exception(f"Yield analysis failed: {analysis_results['error']}")
-    
-    # Then, generate yield strategy
-    yield_strategy_results = yield_analyst.execute_task({
-        "task_type": "yield_strategy",
-        "market_data_path": data_paths["market_data_path"],
-        "wallet_data_path": data_paths["wallet_data_path"],
-        "output_format": "json",
-        "output_path": f"{env['dirs']['recommendations']}/yield_strategy.json"
-    })
-    
-    if "error" in yield_strategy_results:
-        logger.error(f"Yield strategy generation failed: {yield_strategy_results['error']}")
-        raise Exception(f"Yield strategy generation failed: {yield_strategy_results['error']}")
-    
-    logger.info("Yield analysis and strategy generation completed successfully")
-    return {
-        "yield_analysis_path": f"{env['dirs']['analysis']}/yield_analysis.md",
-        "yield_strategy_path": f"{env['dirs']['recommendations']}/yield_strategy.json"
-    }
-
-
-# def run_risk_assessment(env, data_paths):
-#     """Run the risk assessment process."""
-#     logger = env["logger"]
-#     logger.info("Starting risk assessment")
-    
-#     risk_manager = RiskManager(config=env["config"])
-    
-#     # Assess current portfolio risks
-#     assessment_result = risk_manager.execute_task({
-#         "task_type": "risk_assessment",
-#         "market_data_path": data_paths["market_data_path"],
-#         "wallet_data_path": data_paths["wallet_data_path"],
-#         "output_format": "markdown",
-#         "output_path": f"{env['dirs']['analysis']}/risk_assessment.md"
-#     })
-    
-#     if "error" in assessment_result:
-#         logger.error(f"Risk assessment failed: {assessment_result['error']}")
-#         raise Exception(f"Risk assessment failed: {assessment_result['error']}")
-    
-#     # Generate risk-adjusted strategy
-#     strategy_result = risk_manager.execute_task({
-#         "task_type": "risk_adjusted_strategy",
-#         "market_data_path": data_paths["market_data_path"],
-#         "wallet_data_path": data_paths["wallet_data_path"],
-#         "yield_strategy_path": data_paths["yield_strategy_path"],
-#         "output_format": "json",
-#         "output_path": f"{env['dirs']['recommendations']}/risk_adjusted_strategy.json"
-#     })
-    
-#     if "error" in strategy_result:
-#         logger.error(f"Risk-adjusted strategy generation failed: {strategy_result['error']}")
-#         raise Exception(f"Risk-adjusted strategy generation failed: {strategy_result['error']}")
-    
-#     logger.info("Risk assessment and strategy adjustment completed successfully")
-#     return {
-#         "risk_assessment_path": f"{env['dirs']['analysis']}/risk_assessment.md",
-#         "risk_adjusted_strategy_path": f"{env['dirs']['recommendations']}/risk_adjusted_strategy.json"
-#     }
-
-
-# def run_portfolio_optimization(env, data_paths):
-#     """Run the portfolio optimization process."""
-#     logger = env["logger"]
-#     logger.info("Starting portfolio optimization")
-    
-#     portfolio_manager = PortfolioManager(config=env["config"])
-    
-#     result = portfolio_manager.execute_task({
-#         "task_type": "portfolio_optimization",
-#         "market_data_path": data_paths["market_data_path"],
-#         "wallet_data_path": data_paths["wallet_data_path"],
-#         "yield_strategy_path": data_paths["yield_strategy_path"],
-#         "risk_adjusted_strategy_path": data_paths["risk_adjusted_strategy_path"],
-#         "research_path": data_paths["research_path"],
-#         "output_format": "json",
-#         "output_path": f"{env['dirs']['recommendations']}/portfolio_recommendation.json"
-#     })
-    
-#     if "error" in result:
-#         logger.error(f"Portfolio optimization failed: {result['error']}")
-#         raise Exception(f"Portfolio optimization failed: {result['error']}")
-    
-#     logger.info("Portfolio optimization completed successfully")
-#     return {
-#         "portfolio_recommendation_path": f"{env['dirs']['recommendations']}/portfolio_recommendation.json"
-#     }
-
-
-# def run_execution_planning(env, data_paths):
-#     """Run the execution planning process."""
-#     logger = env["logger"]
-#     logger.info("Starting execution planning")
-    
-#     execution_agent = ExecutionAgent(config=env["config"])
-    
-#     result = execution_agent.execute_task({
-#         "task_type": "create_execution_plan",
-#         "wallet_data_path": data_paths["wallet_data_path"],
-#         "portfolio_recommendation_path": data_paths["portfolio_recommendation_path"],
-#         "output_format": "json",
-#         "output_path": f"{env['dirs']['recommendations']}/execution_plan.json"
-#     })
-    
-#     if "error" in result:
-#         logger.error(f"Execution planning failed: {result['error']}")
-#         raise Exception(f"Execution planning failed: {result['error']}")
-    
-#     logger.info("Execution planning completed successfully")
-#     return {
-#         "execution_plan_path": f"{env['dirs']['recommendations']}/execution_plan.json"
-#     }
-
-
-# def generate_final_report(env, data_paths):
-#     """Generate the final report."""
-#     logger = env["logger"]
-#     logger.info("Generating final report")
-    
-#     reporting_agent = ReportingAgent(config=env["config"])
-    
-#     result = reporting_agent.execute_task({
-#         "task_type": "generate_report",
-#         "data_paths": data_paths,
-#         "output_format": "markdown",
-#         "output_path": f"{env['dirs']['reports']}/final_report.md"
-#     })
-    
-#     if "error" in result:
-#         logger.error(f"Report generation failed: {result['error']}")
-#         raise Exception(f"Report generation failed: {result['error']}")
-    
-#     logger.info("Final report generated successfully")
-#     return {
-#         "final_report_path": f"{env['dirs']['reports']}/final_report.md"
-#     }
-
-
 def main():
     """Main execution function."""
-    # Parse command line arguments
     args = parse_arguments()
 
+    # Requests inputs for analysis
+    # Request wallet id (placeholder)
+
     # Request risk tolerance from the user
-    risk_tolerance = input("Please enter your risk tolerance ('low', 'medium', 'high'): ").strip().lower()
-    # Validate risk tolerance input
-    if risk_tolerance not in ['low', 'medium', 'high']:
-        raise ValueError("Risk tolerance must be one of: 'low', 'medium', 'high'")
+    risk_tolerance_input = get_risk_tolerance()
 
     try:
         # Set up environment
@@ -302,8 +109,8 @@ def main():
         # Run the pipeline
         md = MarketData()
         market_data = md.fetch_market_data()
-        print(market_data)
-        wd = WalletData()
+        # print(market_data)
+        # wd = WalletData()
         wallet_data = wd.fetch_wallet_data()
         print(wallet_data)
         yield_analyst = YieldAnalyst(config=env["config"])
@@ -311,7 +118,7 @@ def main():
         print(analysis_results)
         print(yield_strategy_results)
         risk_manager = RiskManager(config=env["config"])
-        analysis_results = risk_manager._analyze_wallet(wallet_data)
+        analysis_results = risk_manager.execute_task(market_data, wallet_data, yield_strategy_results, risk_tolerance_input)
         print(analysis_results)
 
         

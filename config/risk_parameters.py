@@ -1,7 +1,3 @@
-
-DEFAULT_RISK_TOLERANCE = 'medium'
-risk_tolerance = risk_tolerance
-
 risk_parameters = {
     "max_exposure_risk_low": 0.2,  # Max exposure per protocol as a fraction of total assets in low risk
     "max_exposure_risk_medium": 0.4,  # Max exposure per protocol as a fraction of total assets in medium risk

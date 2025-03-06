@@ -57,6 +57,7 @@ class YieldAnalyst(BaseAgent):
         # task_type = task_input.get("task_type", "yield_analysis")
 
         # if task_type == "yield_analysis":
+        print("Vibing on some numbers, back in a flash with your results")
         analysis_results = self._analyze_yields(market_data)
         yield_strategy_results = self._create_strategy(analysis_results, market_data)
         return (analysis_results, yield_strategy_results)
@@ -81,14 +82,27 @@ class YieldAnalyst(BaseAgent):
             analysis_prompt = f"""
 Task: Perform a comprehensive yield analysis on the provided DeFi lending market data.
 
-Please analyze the market data to identify the following:
-1. A summary of yield opportunity, by protocol and pool
-2. Your top recommended yield opportunities across all protocols and assets
+Please analyze the market data and provide the following report:
+4. Risk-adjusted returns analysis considering utilization rates (borrow rate/supply rate) and other risk factors
+5. Anomalies or unusual patterns in the current market (utilize the 7d and 30d averages)
+
+Expected output:
+1. A table, organized by Current Supply Rate (%), from highest to lowest. The columns in the table include:
+- Protocol
+- Market Name
+- Total Supply
+- Total Borrows
+- Utilization % (calculated from Total Borrows / Total Supply)
+- Current Supply Rate (%)
+- 7d Avg Supply Rate (%) - where available
+- 30d Avg Supply Rate (%) - where available
+
+2. Your top 3 recommended yield opportunities across all protocols and assets
 3. Comparative analysis of different protocols (SAVE/Solend, Marginfi, Kamino, Drift)
 4. Risk-adjusted returns analysis considering utilization rates (borrow rate/supply rate) and other risk factors
 5. Anomalies or unusual patterns in the current market (utilize the 7d and 30d averages)
 
-Format your response as a detailed markdown report with appropriate sections, tables, and bullet points.
+Format your response as a detailed markdown report with appropriate sections, tables, and bullet points. Do not make any information up that you do not know.
 Include clear recommendations based on your analysis.
 
 Market Data: {market_data_json}
@@ -114,10 +128,17 @@ Market Data: {market_data_json}
             # Perform yield strategy generation
             # Create detailed prompt for the strategy generation task
             yield_strategy_prompt = f"""
-Task: Generate a recommended allocation strategy based on the given analysis results and market data to optimize the yields of a given pool of assets.
+Task: Generate a recommended allocation strategy to maximize yield based on the given analysis results and market data.
 
-Recommend a portfolio allocation based on your analysis results. Include details on the assets you recommend andtheir expected returns.
-Format your response as a detailed markdown report with appropriate sections, tables, and bullet points.
+Expected output: A table with the recommended positions and their expected returns. The columns should include:
+- Protocol
+- Market Name
+- Allocation percentage
+- Expected yield
+- Rationale
+
+Format your response as a detailed markdown report with appropriate sections, tables, and bullet points. Do not make any information up that you do not know.
+Include clear recommendations based on your analysis.
 
 Analysis Results: {analysis_results}
 Market Data: {market_data_json}

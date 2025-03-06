@@ -190,7 +190,7 @@ Respond in a way that is consistent with your role, goal, and backstory. Focus o
         """Calls the OpenAI LLM with the provided prompt and returns the response text."""
         default_params = {
             "model": "gpt-4o",
-            "max_tokens": 3000,
+            "max_tokens": 2000,
             "temperature": 0.7,
         }
         # Include the agent's persona if requested

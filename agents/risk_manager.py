@@ -1,10 +1,9 @@
-from typing import Dict, Any, Optional, List
-import json
-import logging
-import os
-from pathlib import Path
-from decimal import Decimal
 from datetime import datetime
+import json
+from typing import Dict, Any, Optional
+
+import openai
+from openai import OpenAI
 
 from agents.base_agent import BaseAgent
 from config.risk_parameters import risk_parameters, operational_rules
@@ -39,27 +38,30 @@ class RiskManager(BaseAgent):
         )
         
 
-    def execute_task(self, risk_tolerance: Any, market_data: Any, wallet_data: Any, yield_strategy_results: Any) -> Dict[str, Any]:
+    def execute_task(self, market_data: Any, wallet_data: Any, yield_strategy_results: Any, risk_tolerance_input: str) -> Dict[str, Any]:
         """
         Execute risk assessment tasks.
         
         Args:
-            task_input: Dictionary containing task parameters
-                - "task_type": Type of risk task
-                - "output_format": Format of the output (markdown, json)
-                - "output_path": Path to save the output
-                
+            market_data: Market data
+            wallet_data: Wallet data
+            yield_strategy_results: Yield strategy results
+            risk_tolerance_input: User's risk tolerance level
+            
         Returns:
             Dictionary with task results or error information
         """
-        analysis_results = self._assess_wallet(wallet_data)
+        print("Checking your risk levels, hang tight...")
+        analysis_results = self._analyze_wallet(market_data, wallet_data, risk_tolerance_input)
         return analysis_results
         
-    def _analyze_wallet(self, wallet_data: Any) -> Dict[str, Any]:
+    def _analyze_wallet(self, market_data: Any, wallet_data: Any, risk_tolerance_input: str) -> Dict[str, Any]:
         """Analyze wallet data and return results in markdown format."""
         try:
-            # Convert wallet data to JSON string
+            # Convert wallet and market data to JSON string
             wallet_data_json = json.dumps(wallet_data, default=str)
+            market_data_json = json.dumps(market_data, default=str)
+
             # Perform wallet analysis
             
             # Create a detailed prompt for the analysis task
@@ -67,14 +69,21 @@ class RiskManager(BaseAgent):
 Task: Perform a comprehensive analysis on the current user portfolio based on the provided wallet data.
 
 Please analyze the wallet data to identify the following:
-1. A summary of your current exposure, by protocol and pool
-2. Review portfolio complicance given the risk tolerance of the user and associated risk parameters
+1. A table of your current wallet positions with columns:
+- Protocol
+- Market Name
+- Amount (USDC)
+- Allocation %
+- Obligation Type
+2. Review portfolio compliance given the risk tolerance of the user and associated risk parameters
+3. Review the portfolio for compliance with the operational rules
 
 Format your response as a detailed markdown report with appropriate sections, tables, and bullet points.
 Include clear recommendations based on your analysis.
 
 Wallet Data: {wallet_data_json}
-Risk Tolerance: {risk_tolerance}
+Market Data: {market_data_json}
+Risk Tolerance: {risk_tolerance_input}
 Risk Parameters: {risk_parameters}
 Operational Rules: {operational_rules}
 """
@@ -89,167 +98,3 @@ Operational Rules: {operational_rules}
             }
         
         return analysis_results
-
-    # def _assess_risks(self, task_input: Dict[str, Any]) -> Dict[str, Any]:
-    #     """Assess risks based on market data and wallet data."""
-    #     output_format = task_input.get("output_format", "markdown")
-        
-    #     try:
-            
-    #         # Perform risk assessment
-    #         assessment = self._perform_risk_assessment(
-    #             market_data,
-    #             wallet_data
-    #         )
-            
-    #         # Format the assessment based on the requested format
-    #         if output_format == "markdown":
-    #             formatted_assessment = self._format_assessment_as_markdown(assessment)
-    #         else:
-    #             formatted_assessment = assessment
-            
-    #         # Save the assessment if output_path is specified
-    #         output_path = task_input.get("output_path")
-    #         if output_path:
-    #             self.save_output(formatted_assessment, output_path)
-            
-    #         return {
-    #             "status": "success",
-    #             "data": formatted_assessment,
-    #             "message": "Risk assessment completed successfully"
-    #         }
-            
-    #     except Exception as e:
-    #         self.logger.exception(f"Error assessing risks: {str(e)}")
-    #         return {
-    #             "error": f"Error assessing risks: {str(e)}",
-    #             "status": "failed"
-    #         }
-    
-    # def _generate_risk_adjusted_strategy(self, task_input: Dict[str, Any]) -> Dict[str, Any]:
-    #     """Generate a risk-adjusted strategy based on yield strategy and risk assessment."""
-    #     output_format = task_input.get("output_format", "json")
-        
-    #     try:
-    #         # Load market data
-    #         market_data = self.load_market_data(self.market_data_path)
-            
-    #         # Load wallet data
-    #         wallet_data = self.load_wallet_data(self.wallet_data_path)
-            
-    #         # Load yield strategy
-    #         yield_strategy_path = task_input.get("yield_strategy_path")
-    #         try:
-    #             with open(yield_strategy_path, 'r') as f:
-    #                 yield_strategy = json.load(f)
-    #         except Exception as e:
-    #             return {
-    #                 "error": f"Error loading yield strategy: {str(e)}",
-    #                 "status": "failed"
-    #             }
-            
-    #         # Generate risk-adjusted strategy
-    #         adjusted_strategy = self._adjust_strategy_for_risk(
-    #             market_data,
-    #             wallet_data,
-    #             yield_strategy
-    #         )
-            
-    #         # Format the strategy based on the requested format
-    #         if output_format == "markdown":
-    #             formatted_strategy = self._format_strategy_as_markdown(adjusted_strategy)
-    #         else:
-    #             formatted_strategy = adjusted_strategy
-            
-    #         # Save the strategy if output_path is specified
-    #         output_path = task_input.get("output_path")
-    #         if output_path:
-    #             self.save_output(formatted_strategy, output_path)
-            
-    #         return {
-    #             "status": "success",
-    #             "data": formatted_strategy,
-    #             "message": "Risk-adjusted strategy generated successfully"
-    #         }
-            
-    #     except Exception as e:
-    #         self.logger.exception(f"Error generating risk-adjusted strategy: {str(e)}")
-    #         return {
-    #             "error": f"Error generating risk-adjusted strategy: {str(e)}",
-    #             "status": "failed"
-    #         }
-    
-    # def _perform_risk_assessment(
-    #     self, 
-    #     market_data: Dict[str, Any], 
-    #     wallet_data: Dict[str, Any]
-    # ) -> Dict[str, Any]:
-    #     """
-    #     Perform risk assessment on market data and wallet data.
-        
-    #     In a real implementation, this would involve complex risk modeling.
-    #     For demonstration, we'll implement a simplified version.
-    #     """
-    #     assessment = {
-    #         "overall_risk_level": "medium",
-    #         "protocol_risks": {},
-    #         "concentration_risk": {},
-    #         "utilization_risks": [],
-    #         "recommendations": []
-    #     }
-        
-    #     # Get current allocations
-    #     allocations = self._calculate_allocations(wallet_data)
-        
-    #     # Assess protocol risks
-    #     protocols = set()
-    #     for token_data in market_data:
-    #         for reserve in token_data.get("lending_reserves", []):
-    #             protocols.add(reserve["protocol_name"])
-        
-    #     for protocol in protocols:
-    #         assessment["protocol_risks"][protocol] = self._assess_protocol_risk(protocol, market_data)
-        
-    #     # Assess concentration risk
-    #     assessment["concentration_risk"] = self._assess_concentration_risk(allocations)
-        
-    #     # Assess utilization risks
-    #     assessment["utilization_risks"] = self._assess_utilization_risk(market_data)
-        
-    #     # Generate recommendations
-    #     assessment["recommendations"] = self._generate_risk_recommendations(
-    #         assessment, allocations
-    #     )
-        
-    #     return assessment
-    
-    # def _calculate_allocations(self, wallet_data: Dict[str, Any]) -> Dict[str, float]:
-    #     """Calculate current allocations by protocol."""
-    #     allocations = {}
-    #     total_value = 0
-        
-    #     # Sum up the total value
-    #     for position in wallet_data.get("wallet_positions", []):
-    #         protocol = position["protocol_name"]
-    #         amount = float(position["amount"])
-            
-    #         if protocol not in allocations:
-    #             allocations[protocol] = 0
-            
-    #         allocations[protocol] += amount
-    #         total_value += amount
-            
-    #     for balance in wallet_data.get("wallet_balances", []):
-    #         amount = float(balance["amount"])
-    #         total_value += amount
-            
-    #         if "Unallocated" not in allocations:
-    #             allocations["Unallocated"] = 0
-            
-    #         allocations["Unallocated"] += amount
-            
-    #     # Normalize allocations
-    #     for protocol, amount in allocations.items():
-    #         allocations[protocol] = amount / total_value
-            
-    #     return allocations
