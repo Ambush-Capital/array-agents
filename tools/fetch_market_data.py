@@ -1,31 +1,26 @@
 import requests
-import json
+from datetime import datetime
+from typing import Dict, Any
+from pydantic import Field
+import os
 
-class MarketData:
-    def __init__(self):
-        self.data = None
-        
-    def fetch_market_data(self, api_url):
+class MarketData():
+    """Knowledge source that fetches data from Market Data API."""
+
+    def fetch_market_data(self) -> Dict[Any, str]:
+        """Fetch and format market data."""
+        base_url = "http://localhost:3001"
+        self.api_endpoint = "/current_markets"
+        full_url = f"{base_url}{self.api_endpoint}"  # Use structured input
+
         try:
-            response = requests.get(api_url)
+            print("Fetching market data...")
+            response = requests.get(full_url)
             response.raise_for_status()
-            self.data = response.json()
-            print(f"Market data successfully fetched")
-            return True
-
+            return response.text  # Return JSON response as a string
         except requests.RequestException as e:
-            print(f"Error fetching market data: {str(e)}")
-            return False
-        except Exception as e:
-            print(f"Error saving market data: {str(e)}")
-            return False
-    
-    def get_market_data(self):
-        return self.data
+            return f"Error fetching market data: {str(e)}"  # Return error message
 
 if __name__ == "__main__":
-    api_url = "http://localhost:3001/current_markets"
-    # output_file = "/Users/carly/rayray/brains-py/data/market_data/market_data.json"
-    market_data = MarketData()
-    market_data.fetch_market_data(api_url)
-    print(market_data.get_market_data())
+    instance = MarketData()
+    print(instance.fetch_market_data())

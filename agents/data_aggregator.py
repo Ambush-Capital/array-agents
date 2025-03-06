@@ -3,9 +3,13 @@ import requests
 import json
 import logging
 from pathlib import Path
+from datetime import datetime
+import os
 
 from agents.base_agent import BaseAgent
 from models.market_model import MarketDataManager
+from tools.fetch_market_data import MarketDataKnowledgeSource
+from tools.fetch_wallet_data import WalletDataKnowledgeSource
 
 class DataAggregator(BaseAgent):
     """
@@ -66,92 +70,36 @@ class DataAggregator(BaseAgent):
             }
     
     def _fetch_market_data(self, task_input: Dict[str, Any]) -> Dict[str, Any]:
-        """Fetch market data using the fetch_market_data tool."""
-        api_url = task_input.get("api_url")
-        
-        if not api_url:
-            return {
-                "error": "API URL is required for fetching market data",
-                "status": "failed"
-            }
-        
-        try:
-            # Use the tool to fetch market data
-            tool_result = self.use_tool("fetch_market_data", {"api_url": api_url})
-            
-            if "error" in tool_result:
-                return tool_result
-            
-            # Save the market data if output_path is specified
-            output_path = task_input.get("output_path")
-            if output_path:
-                # Ensure directory exists
-                output_dir = Path(output_path).parent
-                output_dir.mkdir(parents=True, exist_ok=True)
-                
-                # Save the raw data
-                with open(output_path, 'w') as f:
-                    json.dump(tool_result["data"], f, indent=2)
-                
-                self.logger.info(f"Market data saved to {output_path}")
-            
-            return {
-                "status": "success",
-                "data": tool_result["data"],
-                "output_path": output_path,
-                "message": "Market data fetched successfully"
-            }
-            
-        except Exception as e:
-            self.logger.exception(f"Error fetching market data: {str(e)}")
-            return {
-                "error": f"Error fetching market data: {str(e)}",
-                "status": "failed"
-            }
-    
+        """Fetch market data using MarketDataKnowledgeSource and save it."""
+        market_tool = MarketDataKnowledgeSource()
+        market_data = market_tool.fetch_market_data()
+
+        market_data_path = self.config.get('market_data_path', os.path.join('data', 'market_data.json'))
+        os.makedirs(os.path.dirname(market_data_path), exist_ok=True)
+
+        with open(market_data_path, 'w') as f:
+            f.write(market_data)
+
+        return {
+            'market_data_path': market_data_path,
+            'timestamp': datetime.now().isoformat()
+        }
+
     def _fetch_wallet_data(self, task_input: Dict[str, Any]) -> Dict[str, Any]:
-        """Fetch wallet data using the fetch_wallet_data tool."""
-        wallet_address = task_input.get("wallet_address")
-        
-        if not wallet_address:
-            return {
-                "error": "Wallet address is required for fetching wallet data",
-                "status": "failed"
-            }
-        
-        try:
-            # Use the tool to fetch wallet data
-            tool_result = self.use_tool("fetch_wallet_data", {"wallet_address": wallet_address})
-            
-            if "error" in tool_result:
-                return tool_result
-            
-            # Save the wallet data if output_path is specified
-            output_path = task_input.get("output_path")
-            if output_path:
-                # Ensure directory exists
-                output_dir = Path(output_path).parent
-                output_dir.mkdir(parents=True, exist_ok=True)
-                
-                # Save the raw data
-                with open(output_path, 'w') as f:
-                    json.dump(tool_result["data"], f, indent=2)
-                
-                self.logger.info(f"Wallet data saved to {output_path}")
-            
-            return {
-                "status": "success",
-                "data": tool_result["data"],
-                "output_path": output_path,
-                "message": "Wallet data fetched successfully"
-            }
-            
-        except Exception as e:
-            self.logger.exception(f"Error fetching wallet data: {str(e)}")
-            return {
-                "error": f"Error fetching wallet data: {str(e)}",
-                "status": "failed"
-            }
+        """Fetch wallet data using WalletDataKnowledgeSource and save it."""
+        wallet_tool = WalletDataKnowledgeSource()
+        wallet_data = wallet_tool.fetch_wallet_data()
+
+        wallet_data_path = self.config.get('wallet_data_path', os.path.join('data', 'wallet_data.json'))
+        os.makedirs(os.path.dirname(wallet_data_path), exist_ok=True)
+
+        with open(wallet_data_path, 'w') as f:
+            f.write(wallet_data)
+
+        return {
+            'wallet_data_path': wallet_data_path,
+            'timestamp': datetime.now().isoformat()
+        }
     
     def _aggregate_all_data(self, task_input: Dict[str, Any]) -> Dict[str, Any]:
         """

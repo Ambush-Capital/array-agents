@@ -4,6 +4,8 @@ from abc import ABC, abstractmethod
 from typing import Dict, List, Any, Optional
 import logging
 from pathlib import Path
+from openai import OpenAI
+
 
 class BaseAgent(ABC):
     """
@@ -12,7 +14,7 @@ class BaseAgent(ABC):
     This class defines the common interface and functionality that all agents must implement,
     ensuring consistency across the agent ecosystem while allowing for specialized behavior.
     """
-    
+
     def __init__(
         self, 
         agent_id: str,
@@ -41,14 +43,29 @@ class BaseAgent(ABC):
         self.backstory = backstory
         self.knowledge_sources = knowledge_sources or []
         self.tools = tools or []
+
+        # Store configuration
         self.config = config or {}
+
+        # Set up logger first so we can use it for logging
         self.logger = self._setup_logger()
+
+        # Set up OpenAI client with API key from config if available
+        api_key = self.config.get('OPENAI_API_KEY')
         
+        # Initialize the OpenAI client
+        # If api_key is None, the client will try to use the OPENAI_API_KEY environment variable
+        if api_key:
+            self.client = OpenAI(api_key=api_key)
+        else:
+            self.client = OpenAI()  # Will automatically look for OPENAI_API_KEY env var
+            self.logger.info("No API key provided in config, using environment variables if available.")
+
     def _setup_logger(self) -> logging.Logger:
         """Set up a logger for the agent."""
         logger = logging.getLogger(f"agent.{self.agent_id}")
         return logger
-    
+
     @abstractmethod
     def execute_task(self, task_input: Dict[str, Any]) -> Dict[str, Any]:
         """
@@ -61,7 +78,7 @@ class BaseAgent(ABC):
             Dictionary containing the results of the task execution
         """
         pass
-    
+
     def use_tool(self, tool_name: str, tool_input: Dict[str, Any]) -> Dict[str, Any]:
         """
         Use a specific tool available to this agent.
@@ -76,7 +93,7 @@ class BaseAgent(ABC):
         if tool_name not in self.tools:
             self.logger.error(f"Tool '{tool_name}' not available to agent '{self.agent_id}'")
             return {"error": f"Tool '{tool_name}' not available to this agent"}
-            
+
         # Import the tool dynamically
         try:
             module_path = f"tools.{tool_name}"
@@ -86,7 +103,7 @@ class BaseAgent(ABC):
         except Exception as e:
             self.logger.exception(f"Error executing tool '{tool_name}': {str(e)}")
             return {"error": f"Error executing tool: {str(e)}"}
-    
+
     def access_knowledge(self, source_name: str, query: Dict[str, Any]) -> Dict[str, Any]:
         """
         Access a specific knowledge source available to this agent.
@@ -101,7 +118,7 @@ class BaseAgent(ABC):
         if source_name not in self.knowledge_sources:
             self.logger.error(f"Knowledge source '{source_name}' not available to agent '{self.agent_id}'")
             return {"error": f"Knowledge source '{source_name}' not available to this agent"}
-            
+
         # Import the knowledge source dynamically
         try:
             module_path = f"knowledge.{source_name}"
@@ -111,7 +128,7 @@ class BaseAgent(ABC):
         except Exception as e:
             self.logger.exception(f"Error accessing knowledge source '{source_name}': {str(e)}")
             return {"error": f"Error accessing knowledge source: {str(e)}"}
-    
+
     def save_output(self, output: Any, file_path: str) -> bool:
         """
         Save the agent's output to a file.
@@ -127,7 +144,7 @@ class BaseAgent(ABC):
             # Create directory if it doesn't exist
             output_dir = Path(file_path).parent
             output_dir.mkdir(parents=True, exist_ok=True)
-            
+
             # Determine the file type and save accordingly
             if file_path.endswith('.json'):
                 import json
@@ -140,13 +157,77 @@ class BaseAgent(ABC):
                 # Default to string representation
                 with open(file_path, 'w') as f:
                     f.write(str(output))
-                    
+
             self.logger.info(f"Output saved to {file_path}")
             return True
         except Exception as e:
             self.logger.exception(f"Error saving output to {file_path}: {str(e)}")
             return False
+
+    def _build_persona_prompt(self, task_prompt: str) -> str:
+        """
+        Build a prompt that includes the agent's persona information.
+        
+        Args:
+            task_prompt: The task-specific prompt
+            
+        Returns:
+            A complete prompt with persona context
+        """
+        persona_prompt = f"""You are acting as a {self.role}.
+
+Your goal: {self.goal}
+
+Your backstory: {self.backstory}
+
+Task: {task_prompt}
+
+Respond in a way that is consistent with your role, goal, and backstory. Focus on providing high-quality, actionable insights.
+"""
+        return persona_prompt
     
+    def call_llm(self, prompt: str, include_persona: bool = True, **kwargs) -> str:
+        """Calls the OpenAI LLM with the provided prompt and returns the response text."""
+        default_params = {
+            "model": "gpt-4o",
+            "max_tokens": 3000,
+            "temperature": 0.7,
+        }
+        # Include the agent's persona if requested
+        if include_persona:
+            final_prompt = self._build_persona_prompt(prompt)
+        else:
+            final_prompt = prompt
+        
+        # GPT-4 and newer models require the chat completions API
+        if default_params.get("model", kwargs.get("model", "")).startswith(("gpt-4", "gpt-3.5")):
+            # Format for chat completions API
+            messages = kwargs.pop("messages", [{"role": "user", "content": prompt}])
+            params = {**default_params, **kwargs, "messages": messages}
+            try:
+                response = self.client.chat.completions.create(**params)
+                return response.choices[0].message.content.strip()
+            except Exception as e:
+                error_msg = str(e)
+                if "api_key" in error_msg.lower() or "apikey" in error_msg.lower():
+                    self.logger.error("OpenAI API key error: Please set a valid API key in the config or as the OPENAI_API_KEY environment variable")
+                else:
+                    self.logger.error(f"LLM call failed: {e}")
+                raise
+        else:
+            # Legacy completions API format
+            params = {**default_params, **kwargs, "prompt": prompt}
+            try:
+                response = self.client.completions.create(**params)
+                return response.choices[0].text.strip()
+            except Exception as e:
+                error_msg = str(e)
+                if "api_key" in error_msg.lower() or "apikey" in error_msg.lower():
+                    self.logger.error("OpenAI API key error: Please set a valid API key in the config or as the OPENAI_API_KEY environment variable")
+                else:
+                    self.logger.error(f"LLM call failed: {e}")
+                raise
+
     def get_persona(self) -> Dict[str, str]:
         """
         Get the persona information for this agent.
@@ -159,7 +240,7 @@ class BaseAgent(ABC):
             "goal": self.goal,
             "backstory": self.backstory
         }
-    
+
     def __str__(self) -> str:
         """String representation of the agent."""
         return f"{self.agent_id} ({self.role})"
