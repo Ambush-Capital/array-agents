@@ -200,33 +200,29 @@ Respond in a way that is consistent with your role, goal, and backstory. Focus o
             final_prompt = prompt
         
         # GPT-4 and newer models require the chat completions API
-        if default_params.get("model", kwargs.get("model", "")).startswith(("gpt-4", "gpt-3.5")):
-            # Format for chat completions API
+        model = kwargs.get("model", default_params["model"])
+        if model.startswith(("gpt-4", "gpt-3.5")):
+            # Use chat completions API.
             messages = kwargs.pop("messages", [{"role": "user", "content": prompt}])
             params = {**default_params, **kwargs, "messages": messages}
             try:
                 response = self.client.chat.completions.create(**params)
                 return response.choices[0].message.content.strip()
             except Exception as e:
-                error_msg = str(e)
-                if "api_key" in error_msg.lower() or "apikey" in error_msg.lower():
-                    self.logger.error("OpenAI API key error: Please set a valid API key in the config or as the OPENAI_API_KEY environment variable")
-                else:
-                    self.logger.error(f"LLM call failed: {e}")
+                self.logger.error(f"LLM call failed: {e}")
                 raise
         else:
-            # Legacy completions API format
+            # Legacy completions API.
+            # Merge parameters and then remove the unsupported 'max_tokens'
             params = {**default_params, **kwargs, "prompt": prompt}
-            try:
-                response = self.client.completions.create(**params)
-                return response.choices[0].text.strip()
-            except Exception as e:
-                error_msg = str(e)
-                if "api_key" in error_msg.lower() or "apikey" in error_msg.lower():
-                    self.logger.error("OpenAI API key error: Please set a valid API key in the config or as the OPENAI_API_KEY environment variable")
-                else:
-                    self.logger.error(f"LLM call failed: {e}")
-                raise
+            if "max_completion_tokens" in params and "max_tokens" in params:
+                del params["max_tokens"]
+        try:
+            response = self.client.completions.create(**params)
+            return response.choices[0].text.strip()
+        except Exception as e:
+            self.logger.error(f"LLM call failed: {e}")
+            raise
 
     def get_persona(self) -> Dict[str, str]:
         """

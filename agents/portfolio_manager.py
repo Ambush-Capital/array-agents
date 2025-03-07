@@ -84,7 +84,7 @@ Include clear recommendations based on your analysis.
 """
         
         # Call the LLM with the persona-enriched prompt
-        optimized_portfolio = self.call_llm(optimization_prompt, model="o3-mini", max_completion_tokens=2000)
+        optimized_portfolio = self.call_llm(optimization_prompt)
         return optimized_portfolio
  
     def _generate_final_recc(self, optimized_portfolio: Dict[str, Any]) -> Dict[str, Any]:
@@ -108,5 +108,5 @@ Do not provide any extraneous details or explanations
 """
         
         # Call the LLM with the persona-enriched prompt
-        final_recc_to_execute = self.call_llm(final_recc_prompt, verbose=False)
+        final_recc_to_execute = self.call_llm(final_recc_prompt)
         return final_recc_to_execute
