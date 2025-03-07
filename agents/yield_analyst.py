@@ -144,7 +144,7 @@ Analysis Results: {analysis_results}
 Market Data: {market_data_json}
 """
             # Call the LLM with the persona-enriched prompt
-            yield_strategy = self.call_llm(yield_strategy_prompt)
+            yield_strategy = self.call_llm(yield_strategy_prompt, verbose=False)
         except Exception as e:
             self.logger.exception(f"Error generating yield strategy: {str(e)}")
             return {

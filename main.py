@@ -12,7 +12,7 @@ from pathlib import Path
 # from agents.researcher import Researcher
 from agents.yield_analyst import YieldAnalyst
 from agents.risk_manager import RiskManager
-# from agents.portfolio_manager import PortfolioManager
+from agents.portfolio_manager import PortfolioManager
 # from agents.execution_agent import ExecutionAgent
 # from agents.reporting_agent import ReportingAgent
 from tools.fetch_market_data import MarketData
@@ -56,7 +56,7 @@ def setup_environment(args):
         directory.mkdir(parents=True, exist_ok=True)
     
     # Load configuration
-    config = load_config(args.risk_level)
+    config = load_config()
     
     return {
         "logger": logger,
@@ -110,17 +110,38 @@ def main():
         md = MarketData()
         market_data = md.fetch_market_data()
         # print(market_data)
-        # wd = WalletData()
+        wd = WalletData()
         wallet_data = wd.fetch_wallet_data()
-        print(wallet_data)
+        # print(wallet_data)
+        
+        # Initialize the YieldAnalyst and pass market data
         yield_analyst = YieldAnalyst(config=env["config"])
-        (analysis_results, yield_strategy_results) = yield_analyst.execute_task(market_data)
-        print(analysis_results)
+        (yield_analysis_results, yield_strategy_results) = yield_analyst.execute_task(market_data)
+        print(yield_analysis_results)
         print(yield_strategy_results)
+        
+        # Initialize the RiskManager and pass analysis results
         risk_manager = RiskManager(config=env["config"])
-        analysis_results = risk_manager.execute_task(market_data, wallet_data, yield_strategy_results, risk_tolerance_input)
-        print(analysis_results)
+        risk_analysis_results = risk_manager.execute_task(
+            market_data, 
+            wallet_data, 
+            yield_strategy_results, 
+            risk_tolerance_input
+        )
+        print(risk_analysis_results)
 
+        # Initialize the PortfolioManager and pass analysis results
+        portfolio_manager = PortfolioManager(config=env["config"])
+        (optimized_portfolio, final_recc_to_execute) = portfolio_manager.execute_task(
+            market_data, 
+            wallet_data, 
+            yield_analysis_results, 
+            yield_strategy_results, 
+            risk_analysis_results,
+            risk_tolerance_input
+        )
+        print(optimized_portfolio)
+        print(final_recc_to_execute)
         
         # Print summary
         # logger.info(f"Portfolio optimization completed successfully")

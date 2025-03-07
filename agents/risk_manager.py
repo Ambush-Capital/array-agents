@@ -38,24 +38,23 @@ class RiskManager(BaseAgent):
         )
         
 
-    def execute_task(self, market_data: Any, wallet_data: Any, yield_strategy_results: Any, risk_tolerance_input: str) -> Dict[str, Any]:
+    def execute_task(self, market_data: Any, wallet_data: Any, risk_tolerance_input: str, yield_strategy_results: Any) -> Dict[str, Any]:
         """
         Execute risk assessment tasks.
         
         Args:
             market_data: Market data
             wallet_data: Wallet data
-            yield_strategy_results: Yield strategy results
             risk_tolerance_input: User's risk tolerance level
             
         Returns:
             Dictionary with task results or error information
         """
         print("Checking your risk levels, hang tight...")
-        analysis_results = self._analyze_wallet(market_data, wallet_data, risk_tolerance_input)
+        analysis_results = self._analyze_wallet(market_data, wallet_data, risk_tolerance_input, yield_strategy_results)
         return analysis_results
         
-    def _analyze_wallet(self, market_data: Any, wallet_data: Any, risk_tolerance_input: str) -> Dict[str, Any]:
+    def _analyze_wallet(self, market_data: Any, wallet_data: Any, risk_tolerance_input: str, yield_strategy_results: Any) -> Dict[str, Any]:
         """Analyze wallet data and return results in markdown format."""
         try:
             # Convert wallet and market data to JSON string
@@ -66,17 +65,15 @@ class RiskManager(BaseAgent):
             
             # Create a detailed prompt for the analysis task
             analysis_prompt = f"""
-Task: Perform a comprehensive analysis on the current user portfolio based on the provided wallet data.
-
-Please analyze the wallet data to identify the following:
-1. A table of your current wallet positions with columns:
+Tasks:
+1. Analyze the wallet data and provide the following table of current positions:
 - Protocol
 - Market Name
 - Amount (USDC)
 - Allocation %
 - Obligation Type
-2. Review portfolio compliance given the risk tolerance of the user and associated risk parameters
-3. Review the portfolio for compliance with the operational rules
+2. Review the current wallet positions and recommended yield strategy for compliance with the risk tolerance of the user and associated risk parameters
+3. Review the current wallet positions and recommended yield strategy for compliance with the operational rules
 
 Format your response as a detailed markdown report with appropriate sections, tables, and bullet points.
 Include clear recommendations based on your analysis.
@@ -86,6 +83,7 @@ Market Data: {market_data_json}
 Risk Tolerance: {risk_tolerance_input}
 Risk Parameters: {risk_parameters}
 Operational Rules: {operational_rules}
+Recommended Yield Strategy: {yield_strategy_results}
 """
             
             # Call the LLM with the persona-enriched prompt
