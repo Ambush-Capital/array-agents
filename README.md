@@ -52,3 +52,48 @@ brains-py/
 └── LICENSE                    # License information
 ```
 
+```mermaid
+flowchart TD
+    User([User]) --> Inputs
+    Inputs[/"Inputs:
+    - Wallet ID
+    - Risk Level
+      - Low
+      - Med
+      - High"/] --> PortfolioManager
+    
+    Tools["Tools:
+    - Fetch Data
+    - Send Email
+    - Research
+    - Call LLM"] -.-> PortfolioManager
+    
+    subgraph PortfolioManager["Portfolio Team"]
+        PM([Portfolio Manager]) 
+        YA([Yield Analyst])
+        RM([Risk Manager])
+    end
+    
+    Knowledge["Knowledge:
+    - Research
+    - Past Performance
+    - Risk Parameters
+    - Op. Rules"] --> PortfolioManager
+    
+    ArrayDB[(Array DB)] <--> |Market Data| PortfolioManager
+    
+    ArrayDB <--> |API Calls| PortfolioManager
+    
+    ArrayDB --> |Wallet Data| PortfolioManager
+    
+    Kamino[Kamino] --> ArrayDB
+    Marginfi[Marginfi] --> ArrayDB
+    SAVE[SAVE] --> ArrayDB
+    DRIFT[DRIFT] --> ArrayDB
+    SOLANA[SOLANA] --> ArrayDB
+    
+    PortfolioManager --> |Final Recommendation| TransactionSpecialist
+    
+    TransactionSpecialist([Transaction Specialist])
+    
+    TransactionSpecialist -.-> SmartContract["Smart Contract"]
