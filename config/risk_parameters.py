@@ -7,5 +7,6 @@ risk_parameters = {
 operational_rules = {
     "min_yield": 4.0,         # Minimum acceptable yield percentage
     "max_positions": 5.0,     # Maximum number of positions > $1000
-    "min_position_size": 1.0  # Rule to not close a position
+    "min_position_size": 1.0,  # Rule to not close a position
+    "min_position_allocation": .10  # Rule to hold very small positions
 }

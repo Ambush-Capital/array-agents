@@ -67,7 +67,7 @@ class PortfolioManager(BaseAgent):
         # Create a detailed prompt for the optimization task
         optimization_prompt = f"""
 Task: Analyze all of the data provided and make a final recommendation to optimize the portfolio allocation based on yield and risk analysis. 
-Do not make any information up that you do not have available to you.
+Do not make any information up that you do not have available to you. Ensure all assets in wallet are allocated to a yield opportunity.
 
 Here are the data sources to consider that have been provided by your Yield Analyst and Risk Manager:
 1. Market Data: {market_data_json}
@@ -104,6 +104,7 @@ The final recommendation consists of a JSON object with the following components
 4. Obligation Type
 
 Check your final reccomendation to ensure it is consistent with the provided optimized portfolio allocation.
+Ensure all assets in wallet are allocated to a yield opportunity.
 Do not provide any extraneous details or explanations
 """
         

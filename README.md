@@ -2,76 +2,53 @@
 
 This project uses AI agents to develop and execute trading strategies based on raw CSV data files.
 
-## Directory Structure
+## Project Structure
 
-- `data/`: Contains all data-related files.
-  - `wallet_data/`: Contains raw CSV data files with current wallet positions.
-- `src/`: Contains all source code files.
-  - `data_processing.py`: Script for processing raw data.
-  - `strategy_generation.py`: Script for generating trading strategies using LLMs.
-  - `strategy_evaluation.py`: Script for evaluating trading strategies.
-  - `strategy_execution.py`: Script for executing trading strategies.
-  - `utils.py`: Utility functions used across the project.
-- `tests/`: Contains all test files.
-  - `test_data_processing.py`: Unit tests for data processing.
-  - `test_strategy_generation.py`: Unit tests for strategy generation.
-  - `test_strategy_evaluation.py`: Unit tests for strategy evaluation.
-  - `test_strategy_execution.py`: Unit tests for strategy execution.
-- `requirements.txt`: Lists all project dependencies.
-
-## Market Data Management
-
-The project includes a `MarketData` class for handling market data operations. This class is responsible for fetching and managing market data from the API.
-
-### MarketData Class Usage
-
-```python
-from agents.fetch_market_data import MarketData
-
-# Initialize the MarketData object
-market_data = MarketData()
-
-# Fetch market data from API
-api_url = "http://localhost:3001/current_markets"
-market_data.fetch_market_data(api_url)
-
-# Access the stored market data
-data = market_data.get_market_data()
+```
+brains-py/
+├── agents/                      # Agent modules for different analysis tasks
+│   ├── __init__.py
+│   ├── base_agent.py           # Base class for all agents
+│   ├── execution_agent.py      # Handles trade execution logic
+│   ├── portfolio_manager.py    # Manages portfolio allocation
+│   ├── reporting_agent.py      # Generates analysis reports
+│   ├── researcher.py           # Conducts market research
+│   ├── risk_manager.py         # Analyzes and manages risk
+│   └── yield_analyst.py        # Analyzes yield opportunities
+│
+├── config/                      # Configuration files
+│   ├── __init__.py
+│   ├── agent_config.py         # Agent-specific configurations
+│   ├── risk_parameters.py      # Risk management parameters
+│   └── settings.py             # Global settings
+│
+├── data/                       # Data storage
+│   ├── market_data/           # Market-related data
+│   ├── reports/               # Generated reports
+│   ├── research/              # Research findings
+│   └── wallet_data/           # Wallet and portfolio data
+│
+├── knowledge/                  # Knowledge base
+│   ├── __init__.py
+│   ├── base_knowledge_source.py
+│   └── 2025_Q1_Research.md    # Quarterly research data
+│
+├── tools/                      # Utility functions and tools
+│   ├── fetch_market_data.py   # Market data retrieval
+│   ├── fetch_wallet_data.py   # Wallet data retrieval
+│   └── send_email.py          # Email notification system
+│
+├── outputs/                    # Output directory for analysis results
+│   └── [timestamp]/           # Timestamped analysis outputs
+│       ├── analysis/
+│       ├── data/
+│       ├── recommendations/
+│       └── reports/
+│
+├── .env                        # Environment variables
+├── config.py                   # Root configuration
+├── main.py                    # Main application entry point
+├── requirements.txt           # Python dependencies
+└── LICENSE                    # License information
 ```
 
-## Directory Structure
-
-- `agents/`: Contains agent-related code
-  - `fetch_market_data.py`: Contains the MarketData class for market data operations
-- `data/`: Contains all data-related files
-  - `market_data/`: Contains market data files
-  - `wallet_data/`: Contains raw CSV data files with current wallet positions
-- `src/`: Contains all source code files.
-  - `data_processing.py`: Script for processing raw data.
-  - `strategy_generation.py`: Script for generating trading strategies using LLMs.
-  - `strategy_evaluation.py`: Script for evaluating trading strategies.
-  - `strategy_execution.py`: Script for executing trading strategies.
-  - `utils.py`: Utility functions used across the project.
-- `tests/`: Contains all test files.
-  - `test_data_processing.py`: Unit tests for data processing.
-  - `test_strategy_generation.py`: Unit tests for strategy generation.
-  - `test_strategy_evaluation.py`: Unit tests for strategy evaluation.
-  - `test_strategy_execution.py`: Unit tests for strategy execution.
-- `requirements.txt`: Lists all project dependencies.
-
-
-
-- Using a virtual environment
-    - Create environment (new project)
-        * python -m venv env (in project directory)
-    - Activate
-        - source env/bin/activate
-    - Deactivate
-        - deactivate
-
-#Step 1: Create a virtual environment  
-- python -m venv env (create)
-- source env/bin/activate (activate)
-#Step 2: Initialize all the shit
-- pip install -r requirements.txt
-#

@@ -4,3 +4,4 @@ numpy
 openai
 requests
 matplotlib>=3.0.0
+sendgrid

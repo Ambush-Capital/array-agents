@@ -6,6 +6,8 @@ import logging
 import os
 from datetime import datetime
 from pathlib import Path
+from sendgrid import SendGridAPIClient
+from sendgrid.helpers.mail import Mail
 
 # Import agent classes
 # from agents.data_aggregator import DataAggregator
@@ -13,10 +15,11 @@ from pathlib import Path
 from agents.yield_analyst import YieldAnalyst
 from agents.risk_manager import RiskManager
 from agents.portfolio_manager import PortfolioManager
-# from agents.execution_agent import ExecutionAgent
+from agents.execution_agent import ExecutionAgent
 # from agents.reporting_agent import ReportingAgent
 from tools.fetch_market_data import MarketData
 from tools.fetch_wallet_data import WalletData
+from tools.send_email import SendEmail
 
 # Import config and utilities
 from config.settings import load_config
@@ -142,6 +145,50 @@ def main():
         )
         print(optimized_portfolio)
         print(final_recc_to_execute)
+
+        # Initialize the ExecutionAgent and pass final reccomendation
+        execution_agent = ExecutionAgent(config=env["config"])
+        execution_plan = execution_agent.execute_task(
+            wallet_data, 
+            final_recc_to_execute
+        )
+        print(wallet_data)
+        print(final_recc_to_execute)
+        print(execution_plan)
+
+        current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+        # using SendGrid's Python Library
+        # https://github.com/sendgrid/sendgrid-python
+        output= f"""
+        Market Data: {market_data}
+        Wallet Data: {wallet_data}
+        Yield Analysis Results: {yield_analysis_results}
+        Yield Strategy Results: {yield_strategy_results}
+        Risk Analysis Results: {risk_analysis_results}
+        Optimized Portfolio: {optimized_portfolio}
+        Final Recommendations: {final_recc_to_execute}
+        Execution Plan: {execution_plan}
+        """
+        SendEmail().send_full_analysis(output, 'carly@ambush.capital', current_time)
+        
+        # Print summary
+        # logger.info(f"Portfolio optimization completed successfully")
+        # logger.info(f"Final report available at: {report_paths['final_report_path']}")
+        # logger.info(f"Portfolio recommendation available at: {portfolio_paths['portfolio_recommendation_path']}")
+        # logger.info(f"Execution plan available at: {execution_paths['execution_plan_path']}")
+        
+        # print("\n" + "="*80)
+        # print("DeFi Portfolio Optimization Completed Successfully")
+        # print("="*80)
+        # print(f"Final report: {report_paths['final_report_path']}")
+        # print(f"Portfolio recommendation: {portfolio_paths['portfolio_recommendation_path']}")
+        # print(f"Execution plan: {execution_paths['execution_plan_path']}")
+        # print("="*80 + "\n")
+        
+        return 0
+        
+
         
         # Print summary
         # logger.info(f"Portfolio optimization completed successfully")

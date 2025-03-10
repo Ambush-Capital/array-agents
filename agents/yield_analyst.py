@@ -82,10 +82,6 @@ class YieldAnalyst(BaseAgent):
             analysis_prompt = f"""
 Task: Perform a comprehensive yield analysis on the provided DeFi lending market data.
 
-Please analyze the market data and provide the following report:
-4. Risk-adjusted returns analysis considering utilization rates (borrow rate/supply rate) and other risk factors
-5. Anomalies or unusual patterns in the current market (utilize the 7d and 30d averages)
-
 Expected output:
 1. A table, organized by Current Supply Rate (%), from highest to lowest. The columns in the table include:
 - Protocol
@@ -99,11 +95,12 @@ Expected output:
 
 2. Your top 3 recommended yield opportunities across all protocols and assets
 3. Comparative analysis of different protocols (SAVE/Solend, Marginfi, Kamino, Drift)
-4. Risk-adjusted returns analysis considering utilization rates (borrow rate/supply rate) and other risk factors
-5. Anomalies or unusual patterns in the current market (utilize the 7d and 30d averages)
+4. Anomalies or unusual patterns in the current market (utilize the 7d and 30d averages)
 
 Format your response as a detailed markdown report with appropriate sections, tables, and bullet points. Do not make any information up that you do not know.
 Include clear recommendations based on your analysis.
+
+Do not make up any information that you do not have
 
 Market Data: {market_data_json}
 """
@@ -137,8 +134,7 @@ Expected output: A table with the recommended positions and their expected retur
 - Expected yield
 - Rationale
 
-Format your response as a detailed markdown report with appropriate sections, tables, and bullet points. Do not make any information up that you do not know.
-Include clear recommendations based on your analysis.
+Do not make any information up that you do not know.
 
 Analysis Results: {analysis_results}
 Market Data: {market_data_json}
