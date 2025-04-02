@@ -52,10 +52,9 @@ def setup_environment(args):
     
     data_dir = run_dir / "data"
     analysis_dir = run_dir / "analysis"
-    recommendations_dir = run_dir / "recommendations"
-    reports_dir = run_dir / "reports"
+    recommendations_dir = run_dir / "recommendation"
     
-    for directory in [data_dir, analysis_dir, recommendations_dir, reports_dir]:
+    for directory in [data_dir, analysis_dir, recommendations_dir]:
         directory.mkdir(parents=True, exist_ok=True)
     
     # Load configuration
@@ -68,8 +67,7 @@ def setup_environment(args):
             "run": str(run_dir),
             "data": str(data_dir),
             "analysis": str(analysis_dir),
-            "recommendations": str(recommendations_dir),
-            "reports": str(reports_dir)
+            "recommendations": str(recommendations_dir)
         }
     }
 
