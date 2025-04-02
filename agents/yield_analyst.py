@@ -7,8 +7,7 @@ from decimal import Decimal
 from datetime import datetime
 
 from agents.base_agent import BaseAgent
-from models.market_model import MarketData, LendingReserve
-# from tools.fetch_market_data import MarketDataKnowledgeSource
+
 
 class YieldAnalyst(BaseAgent):
     """
